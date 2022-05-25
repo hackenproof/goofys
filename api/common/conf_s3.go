@@ -35,7 +35,7 @@ type S3Config struct {
 	RoleExternalId  string
 	RoleSessionName string
 	StsEndpoint     string
-
+        CredFilename    string
 	RequesterPays bool
 	Region        string
 	RegionSet     bool
@@ -85,6 +85,7 @@ func (c *S3Config) ToAwsConfig(flags *FlagStorage) (*aws.Config, error) {
 		if c.AccessKey != "" {
 			c.Credentials = credentials.NewStaticCredentials(c.AccessKey, c.SecretKey, "")
 		}
+                c.Credentials = credentials.NewSharedCredentials(c.CredFilename, c.Profile)
 	}
 	if flags.Endpoint != "" {
 		awsConfig.Endpoint = &flags.Endpoint

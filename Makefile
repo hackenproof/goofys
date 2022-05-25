@@ -17,7 +17,7 @@ install:
 
 
 
-SERVICE=hp-platform
+SERVICE=goofys
 PATH_DOCKER_FILE=$(realpath ./build/Dockerfile)
 DOCKER_REGISTRY_ENTRY=$(AWS_ECR_REGISTRY)/backend/$(SERVICE)
 

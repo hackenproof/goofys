@@ -14,3 +14,45 @@ build:
 
 install:
 	go install -ldflags "-X main.Version=`git rev-parse HEAD`"
+
+
+
+SERVICE=hp-platform
+PATH_DOCKER_FILE=$(realpath ./build/Dockerfile)
+DOCKER_REGISTRY_ENTRY=$(AWS_ECR_REGISTRY)/backend/$(SERVICE)
+
+ifneq ($(GIT_TAG),)
+	IMAGE_TAG = $(GIT_TAG)
+else ifeq ($(GIT_BRANCH),release)
+	IMAGE_TAG = "latest"
+else ifneq ($(GIT_BRANCH),)
+	IMAGE_TAG = $(GIT_BRANCH)
+endif
+
+.PHONY: docker_image_build
+docker_image_build:
+	@echo ">>> Building docker image"
+	docker build \
+		-t $(SERVICE) \
+		--build-arg GIT_REPO="$(GIT_REPO)" \
+		--build-arg GIT_TAG="$(GIT_TAG)" \
+		--build-arg GIT_BRANCH="$(GIT_BRANCH)" \
+		--build-arg GIT_COMMIT="$(GIT_COMMIT)" \
+		-f $(PATH_DOCKER_FILE) \
+		.
+
+.PHONY: docker_image_inspect
+docker_image_inspect:
+	@echo ">>> Inspecting docker container"
+	docker inspect \
+		-f '{{index .ContainerConfig.Labels "repo"}}' \
+		-f '{{index .ContainerConfig.Labels "tag"}}' \
+		-f '{{index .ContainerConfig.Labels "branch"}}' \
+		-f '{{index .ContainerConfig.Labels "commit"}}' \
+		$(SERVICE)
+
+.PHONY: docker_image_registry_push
+docker_image_registry_push:
+	@echo ">>> Tag and push docker image"
+	@docker tag $(SERVICE) $(DOCKER_REGISTRY_ENTRY):$(IMAGE_TAG)
+	@docker push $(DOCKER_REGISTRY_ENTRY):$(IMAGE_TAG)

@@ -1,0 +1,57 @@
+name: goofys
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+
+env:
+  AWS_ECR_REGION: eu-west-1
+  AWS_ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+  GIT_COMMIT: ${{ github.sha }}
+  GIT_REPO: ${{ github.repository }}
+
+jobs:
+  auth-build-push:
+    name: Authenticate to AWS, build and push docker image
+    runs-on: ubuntu-latest
+    if: ${{ (github.ref_type == 'tag') || (github.ref_name == 'main') || (startsWith(github.ref_name, 'ghbuild-')) }}
+
+    steps:
+      - name: Set GIT_TAG variable
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          echo "GIT_TAG=$(TAG=${{ github.ref_name }} && echo ${TAG#ghbuild-} | cut -d '/' -f 2)" >> $GITHUB_ENV
+      
+      - name: Set GIT_BRANCH variable
+        if: ${{ github.ref_type == 'branch' }}
+        run: |
+          echo "GIT_BRANCH=$(TAG=${{ github.ref_name }} && echo ${TAG#ghbuild-} | cut -d '/' -f 2)" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_ECR_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: make docker_image_build
+
+      - name: Inspect docker image
+        run: make docker_image_inspect
+
+      - name: Tag docker image and push to registry
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: make docker_image_registry_push

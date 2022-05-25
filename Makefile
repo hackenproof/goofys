@@ -19,7 +19,7 @@ install:
 
 SERVICE=goofys
 PATH_DOCKER_FILE=$(realpath ./build/Dockerfile)
-DOCKER_REGISTRY_ENTRY=$(AWS_ECR_REGISTRY)/backend/$(SERVICE)
+DOCKER_REGISTRY_ENTRY=$(AWS_ECR_REGISTRY)/core/$(SERVICE)
 
 ifneq ($(GIT_TAG),)
 	IMAGE_TAG = $(GIT_TAG)

@@ -17,7 +17,7 @@ jobs:
   auth-build-push:
     name: Authenticate to AWS, build and push docker image
     runs-on: ubuntu-latest
-    if: ${{ (github.ref_type == 'tag') || (github.ref_name == 'main') || (startsWith(github.ref_name, 'ghbuild-')) }}
+    if: ${{ (github.ref_type == 'tag') || (github.ref_name == 'master') || (startsWith(github.ref_name, 'ghbuild-')) }}
 
     steps:
       - name: Set GIT_TAG variable

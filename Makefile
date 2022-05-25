@@ -23,7 +23,7 @@ DOCKER_REGISTRY_ENTRY=$(AWS_ECR_REGISTRY)/core/$(SERVICE)
 
 ifneq ($(GIT_TAG),)
 	IMAGE_TAG = $(GIT_TAG)
-else ifeq ($(GIT_BRANCH),release)
+else ifeq ($(GIT_BRANCH),master)
 	IMAGE_TAG = "latest"
 else ifneq ($(GIT_BRANCH),)
 	IMAGE_TAG = $(GIT_BRANCH)
